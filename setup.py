@@ -18,7 +18,16 @@ setup(name='pyramid_sqladmin/',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          # -*- Extra requirements: -*-
+          'sqla_declarative',
+          'pyramid',
+          'SQLAlchemy',
+          'zope.sqlalchemy',
+          'tw2.core',
+          'tw2.sqla',
+      ],
+      test_suite = 'nose.collector',
+      tests_require=[
+          'nose',
       ],
       entry_points="""
       # -*- Entry points: -*-
