@@ -1,11 +1,12 @@
 from pyramid.httpexceptions import HTTPFound
-from pyramid.security import Allow
+from pyramid.security import Allow, Everyone
 from pyramid.view import view_config
 from sqlalchemy.orm.mapper import _mapper_registry
 import transaction
 import tw2.sqla as tws
 import tw2.core as twc
 import inspect
+import os
 
 
 _marker = object()
@@ -75,11 +76,18 @@ def exist_class(info, request):
     return True
 
 
+
+# We need an object to set the permission for the sqladmin home page
+class HomeFactory(object): pass
+
+
 def admin_factory(request):
     """Set the admin permission on the found obj or cls
     """
-    cls_or_obj = request.matchdict['cls_or_obj']
-    cls_or_obj.__acl__ = [(Allow, 'role:admin', 'admin')]
+    acl = get_setting(request.registry.settings, 'acl')
+    cls_or_obj = request.matchdict.get('cls_or_obj')
+    cls_or_obj = cls_or_obj or HomeFactory()
+    cls_or_obj.__acl__ = [(Allow, acl, 'sqladmin')]
     return cls_or_obj
 
 
@@ -87,7 +95,8 @@ def admin_factory(request):
 # Views
 @view_config(
     route_name='admin_home',
-    renderer='pyramid_sqladmin:templates/home.mak')
+    permission='sqladmin',
+    renderer='sqladmin/home.mak')
 def home(request):
     """Display all the editable classes
     """
@@ -99,7 +108,8 @@ def home(request):
 
 @view_config(
     route_name='admin_list',
-    renderer='pyramid_sqladmin:templates/default.mak')
+    permission='sqladmin',
+    renderer='sqladmin/default.mak')
 def admin_list(context, request):
     """Display all the objects in the DB for a given class.
     """
@@ -110,10 +120,12 @@ def admin_list(context, request):
 
 @view_config(
     route_name='admin_edit',
-    renderer='pyramid_sqladmin:templates/default.mak')
+    permission='sqladmin',
+    renderer='sqladmin/default.mak')
 @view_config(
     route_name='admin_new',
-    renderer='pyramid_sqladmin:templates/default.mak')
+    permission='sqladmin',
+    renderer='sqladmin/default.mak')
 def add_or_update(context, request):
     """Add or update a DB object.
     """
@@ -149,28 +161,82 @@ def add_or_update(context, request):
     }
 
 
+SETTINGS_PREFIX = 'sqladmin.'
+
+
+def security_parser(value):
+    if value == 'Everyone':
+        return Everyone
+    return value
+
+
+default_settings = (
+    ('route_prefix', str, '/admin'),
+    ('acl', security_parser, 'sqladmin'),
+    )
+
+
+def parse_settings(settings):
+    parsed = {}
+    def populate(name, convert, default):
+        name = '%s%s' % (SETTINGS_PREFIX, name)
+        value = convert(settings.get(name, default))
+        parsed[name] = value
+    for name, convert, default in default_settings:
+        populate(name, convert, default)
+    return parsed
+
+
+def get_setting(settings, name):
+    name = '%s%s' % (SETTINGS_PREFIX, name)
+    return settings.get(name)
+
 
 def includeme(config):
+
+    settings = parse_settings(config.registry.settings)
+    config.registry.settings.update(settings)
+
+    if not 'mako.directories' in config.registry.settings:
+        config.registry.settings['mako.directories'] = []
+    sqladmin_dir = 'pyramid_sqladmin:templates'
+    if type(config.registry.settings['mako.directories']) is list:
+        config.registry.settings['mako.directories'] += [sqladmin_dir]
+    else:
+        config.registry.settings['mako.directories'] += '\n%s' % sqladmin_dir
+
+    route_prefix = get_setting(settings, 'route_prefix')
+    assert route_prefix.startswith('/'), ('The route_prefix %s is not valid.'
+         ' It should start with a /') % route_prefix
+
     config.add_route(
         'admin_home',
-        '/admin',
+        route_prefix,
+        factory=admin_factory,
     )
     config.add_route(
         'admin_list',
-        '/admin/{classname}',
+        os.path.join(route_prefix, '{classname}'),
         factory=admin_factory,
         custom_predicates=(exist_class,),
     )
     config.add_route(
         'admin_new',
-        '/admin/{classname}/new',
+        os.path.join(route_prefix, '{classname}', 'new'),
         factory=admin_factory,
         custom_predicates=(exist_class,),
     )
     config.add_route(
         "admin_edit",
-        '/admin/{classname}/{id}/edit',
+        os.path.join(route_prefix, '{classname}', '{id}', 'edit'),
         factory=admin_factory,
         custom_predicates=(exist_object,),
     )
     config.scan()
+
+    # Set edit link on all the SQLAlchemy objects
+    for classname, cls in get_mapped_classes().items():
+        if not hasattr(cls, 'tws_edit_link'):
+            link = os.path.join(route_prefix, classname, '$', 'edit')
+            cls.tws_edit_link = link
+
