@@ -1,3 +1,4 @@
 include README.rst
 include LICENSE.txt
-include js/xmltools.js
+recursive-include pyramid_sqladmin *.py *.mak *.mako
+prune *.pyc
