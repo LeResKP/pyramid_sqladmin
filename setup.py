@@ -26,6 +26,7 @@ setup(name='pyramid_sqladmin/',
       zip_safe=False,
       install_requires=[
           'sqla_declarative',
+          'pyramid_mako',
           'pyramid',
           'SQLAlchemy',
           'zope.sqlalchemy',

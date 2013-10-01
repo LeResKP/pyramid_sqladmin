@@ -342,6 +342,7 @@ class FunctionalTests(unittest.TestCase):
 
         config.add_static_view('static', 'static', cache_max_age=3600)
         config.include('pyramid_sqladmin')
+        config.include('pyramid_mako')
         config.scan()
         return config.make_wsgi_app()
 
