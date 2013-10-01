@@ -10,7 +10,7 @@ except ImportError:
 
 version = '0.1'
 
-setup(name='pyramid_sqladmin/',
+setup(name='pyramid_sqladmin',
       version=version,
       description="Simple way to edit your SQLAlchemy objects in pyramid",
       long_description="""\
