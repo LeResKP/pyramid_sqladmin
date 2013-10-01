@@ -392,9 +392,9 @@ class FunctionalTests(unittest.TestCase):
     <span class="error"></span>
     <table>
     <tr class="odd required" id="name:container">
-      <th>Name</th>
+      <th><label for="name">Name</label></th>
       <td>
-        <input name="name" type="text" id="name"/>
+        <input name="name" type="text" id="name" value="" />
         <span id="name:error"></span>
       </td>
     </tr>
@@ -445,7 +445,7 @@ class FunctionalTests(unittest.TestCase):
     <span class="error"></span>
     <table>
       <tr class="odd required error"  id="name:container">
-        <th>Name</th>
+        <th><label for="name">Name</label></th>
         <td>
           <input name="name" type="text" id="name" value=""/>
           <span id="name:error">Enter a value</span>
@@ -478,7 +478,7 @@ class FunctionalTests(unittest.TestCase):
     <span class="error"></span>
     <table>
     <tr class="odd required" id="name:container">
-      <th>Name</th>
+      <th><label for="name">Name</label></th>
       <td>
         <input name="name" type="text" id="name" value="Bob"/>
         <span id="name:error"></span>
@@ -533,7 +533,7 @@ class FunctionalTests(unittest.TestCase):
     <span class="error"></span>
     <table>
       <tr class="odd required error"  id="name:container">
-        <th>Name</th>
+        <th><label for="name">Name</name></th>
         <td>
           <input name="name" type="text" id="name" value=""/>
           <span id="name:error">Enter a value</span>
