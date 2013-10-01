@@ -40,6 +40,7 @@ setup(name='pyramid_sqladmin/',
           'FormEncode',
           'BeautifulSoup',
           'strainer',
+          'sieve',
       ],
       entry_points="""
       # -*- Entry points: -*-
