@@ -1,0 +1,4 @@
+include README.rst
+include LICENSE.txt
+recursive-include pyramid_sqladmin *.py *.mak *.mako
+prune *.pyc
